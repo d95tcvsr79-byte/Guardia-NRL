@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guardia Neurología</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .silicon-urgent { background-color: #fee2e2; border: 2px solid #ef4444; }
+        .silicon-done { background-color: #dcfce7; border: 2px solid #22c55e; }
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .animate-pulse-subtle { animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen pb-12">
+
+    <!-- Navbar / Pestañas -->
+    <nav class="bg-blue-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto flex justify-around p-3">
+            <button onclick="switchTab('registro')" id="btn-registro" class="font-bold border-b-2 border-white px-4 py-2">📝 Registro</button>
+            <button onclick="switchTab('pendientes')" id="btn-pendientes" class="font-bold border-b-2 border-transparent px-4 py-2 relative text-gray-300">
+                ⚠️ Pendientes
+                <span id="badge-pendientes" class="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+            </button>
+            <button onclick="switchTab('historico')" id="btn-historico" class="font-bold border-b-2 border-transparent px-4 py-2 text-gray-300">📦 Historial</button>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto p-4">
+
+        <!-- ================= PESTAÑA REGISTRO ================= -->
+        <section id="tab-registro" class="space-y-6">
+            <div class="bg-white p-5 rounded-xl shadow">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Nuevo Paciente</h2>
+                <form id="paciente-form" onsubmit="guardarPaciente(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Categoría</label>
+                            <select id="categoria" onchange="toggleCampos()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-50 border" required>
+                                <option value="Urgencias Neurología">Urgencias Neurología</option>
+                                <option value="Interconsulta Medicina">Interconsulta Medicina</option>
+                                <option value="Interconsulta Oftalmología">Interconsulta Oftalmología</option>
+                                <option value="Otras Interconsultas">Otras Interconsultas</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">NHC</label>
+                            <input type="text" id="nhc" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-50 border" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Iniciales</label>
+                            <input type="text" id="iniciales" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-50 border" required placeholder="Ej: A.G.M.">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Sospecha Clínica</label>
+                        <input type="text" id="sospecha" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-50 border" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Observaciones</label>
+                        <textarea id="observaciones" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-50 border"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                        <div class="space-y-2 bg-blue-50 p-3 rounded-lg">
+                            <span class="font-semibold text-blue-900 block mb-1">Checklist Básica</span>
+                            <label class="flex items-center"><input type="checkbox" id="check-visto" class="w-5 h-5 mr-2"> Visto</label>
+                            <label class="flex items-center"><input type="checkbox" id="check-escrito" class="w-5 h-5 mr-2"> Escrito</label>
+                            <label class="flex items-center"><input type="checkbox" id="check-familia" class="w-5 h-5 mr-2"> Familia Informada</label>
+                        </div>
+                        
+                        <div class="space-y-2 bg-amber-50 p-3 rounded-lg">
+                            <span class="font-semibold text-amber-900 block mb-1">¿Es Ictus?</span>
+                            <label class="flex items-center"><input type="checkbox" id="check-ictus" onchange="toggleCampos()" class="w-5 h-5 mr-2"> Sí, es Ictus</label>
+                            <div id="campos-ictus" class="pl-6 space-y-2 hidden">
+                                <label class="flex items-center"><input type="checkbox" id="check-proces" class="w-4 h-4 mr-2"> Procés activado</label>
+                                <label class="flex items-center"><input type="checkbox" id="check-ecg" class="w-4 h-4 mr-2"> ECG realizado</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campos Condicionales de Urgencias Neurología -->
+                    <div id="campos-urgencias" class="bg-purple-50 p-4 rounded-lg space-y-3">
+                        <span class="font-semibold text-purple-900 block">Destino Urgencias</span>
+                        <div class="flex gap-4">
+                            <label><input type="radio" name="destino" value="Alta" onchange="toggleCampos()" checked> Alta</label>
+                            <label><input type="radio" name="destino" value="Ingreso" onchange="toggleCampos()"> Ingreso</label>
+                            <label><input type="radio" name="destino" value="Cambio de Servicio" onchange="toggleCampos()"> Cambio de Servicio</label>
+                        </div>
+                        <div id="campo-informe-cerrado" class="pl-4 hidden">
+                            <label class="flex items-center text-red-700 font-medium"><input type="checkbox" id="check-informe" class="w-5 h-5 mr-2"> 🛑 Informe Urgencias Cerrado</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold p-3 rounded-lg hover:bg-blue-700 transition">Añadir Paciente a la Guardia</button>
+                </form>
+            </div>
+
+            <!-- Lista Activa Rápida -->
+            <div class="bg-white p-5 rounded-xl shadow">
+                <h3 class="text-lg font-bold text-gray-800 mb-3">Pacientes de la Guardia</h3>
+                <div id="lista-pacientes" class="space-y-3"></div>
+            </div>
+        </section>
+
+        <!-- ================= PESTAÑA PENDIENTES ================= -->
+        <section id="tab-pendientes" class="space-y-4 hidden">
+            <h2 class="text-xl font-bold text-red-600">⚠️ Tareas Pendientes Urgentes</h2>
+            <div id="lista-pendientes" class="space-y-3"></div>
+        </section>
+
+        <!-- ================= PESTAÑA HISTORIAL ================= -->
+        <section id="tab-historico" class="space-y-4 hidden">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-800">📦 Historial de Pacientes Archivados</h2>
+                <button onclick="borrarTodo()" class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200">Borrar Base de Datos</button>
+            </div>
+            <div id="lista-historico" class="space-y-3"></div>
+        </section>
+
+    </main>
+
+    <script>
+        let pacientes = JSON.parse(localStorage.getItem('pacientes_guardia')) || [];
+
+        function guardarPaciente(e) {
+            e.preventDefault();
+            const destinoSeleccionado = document.querySelector('input[name="destino"]:checked')?.value || 'Alta';
+            const nuevo = {
+                id: Date.now(),
+                categoria: document.getElementById('categoria').value,
+                nhc: document.getElementById('nhc').value,
+                iniciales: document.getElementById('iniciales').value.toUpperCase(),
+                sospecha: document.getElementById('sospecha').value,
+                observaciones: document.getElementById('observaciones').value,
+                visto: document.getElementById('check-visto').checked,
+                escrito: document.getElementById('check-escrito').checked,
+                silicon: false,
+                familia: document.getElementById('check-familia').checked,
+                isIctus: document.getElementById('check-ictus').checked,
+                proces: document.getElementById('check-proces').checked,
+                ecg: document.getElementById('check-ecg').checked,
+                destino: destinoSeleccionado,
+                informeCerrado: document.getElementById('check-informe').checked,
+                archivado: false
+            };
+            if(nuevo.categoria !== 'Urgencias Neurología') nuevo.destino = 'N/A';
+            
+            pacientes.push(nuevo);
+            actualizarLocalStorage();
+            document.getElementById('paciente-form').reset();
+            toggleCampos();
+            render();
+        }
+
+        function toggleCampos() {
+            const cat = document.getElementById('categoria').value;
+            const isIctus = document.getElementById('check-ictus').checked;
+            const destino = document.querySelector('input[name="destino"]:checked')?.value;
+
+            document.getElementById('campos-urgencias').style.display = (cat === 'Urgencias Neurología') ? 'block' : 'none';
+            document.getElementById('campos-ictus').style.display = isIctus ? 'block' : 'none';
+            document.getElementById('campo-informe-cerrado').style.display = (cat === 'Urgencias Neurología' && destino === 'Ingreso') ? 'block' : 'none';
+        }
+
+        function toggleCheck(id, campo) {
+            const pac = pacientes.find(p => p.id === id);
+            if(pac) {
+                pac[campo] = !pac[campo];
+                actualizarLocalStorage();
+                render();
+            }
+        }
+
+        function archivar(id) {
+            const pac = pacientes.find(p => p.id === id);
+            if(pac) { pac.archivado = true; actualizarLocalStorage(); render(); }
+        }
+
+        function actualizarLocalStorage() {
+            localStorage.setItem('pacientes_guardia', JSON.stringify(pacientes));
+        }
+
+        function switchTab(tab) {
+            ['registro', 'pendientes', 'historico'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`btn-${t}`).className = "font-bold border-b-2 border-transparent px-4 py-2 text-gray-300";
+            });
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            document.getElementById(`btn-${tab}`).className = "font-bold border-b-2 border-white px-4 py-2 text-white";
+        }
+
+        function render() {
+            const listaActivos = document.getElementById('lista-pacientes');
+            const listaPendientes = document.getElementById('lista-pendientes');
+            const listaHistorico = document.getElementById('lista-historico');
+            
+            listaActivos.innerHTML = '';
+            listaPendientes.innerHTML = '';
+            listaHistorico.innerHTML = '';
+            
+            let numPendientes = 0;
+
+            pacientes.forEach(p => {
+                let pendientesTxt = [];
+                if(!p.visto) pendientesTxt.push("Visto");
+                if(!p.escrito) pendientesTxt.push("Escrito");
+                if(!p.silicon) pendientesTxt.push("🚨 REGISTRO SILICON");
+                if(!p.familia) pendientesTxt.push("Informar Familia");
+                if(p.isIctus && !p.proces) pendientesTxt.push("Procés Ictus");
+                if(p.isIctus && !p.ecg) pendientesTxt.push("ECG Ictus");
+                if(p.categoria === 'Urgencias Neurología' && p.destino === 'Ingreso' && !p.informeCerrado) pendientesTxt.push("Cerrar Informe");
+
+                const tienePendientes = pendientesTxt.length > 0;
+
+                const htmlCard = `
+                    <div class="border rounded-lg p-4 bg-white shadow-sm space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wide px-2 py-1 rounded bg-blue-100 text-blue-800">${p.categoria}</span>
+                                <h4 class="text-lg font-bold text-gray-900 mt-1">${p.nhc} <span class="text-gray-500">(${p.iniciales})</span></h4>
+                                <p class="text-sm text-gray-700 font-medium">📋 ${p.sospecha}</p>
+                                ${p.observaciones ? `<p class="text-xs text-gray-500 mt-1 italic">Obs: ${p.observaciones}</p>` : ''}
+                            </div>
+                            ${!p.archivado ? `<button onclick="archivar(${p.id})" class="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200">📦 Archivar</button>` : '<span class="text-xs text-green-600 font-bold">Archivado</span>'}
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 text-xs pt-1">
+                            <button onclick="toggleCheck(${p.id}, 'visto')" class="px-2 py-1 rounded border ${p.visto ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-50 text-gray-500'}">✓ Visto</button>
+                            <button onclick="toggleCheck(${p.id}, 'escrito')" class="px-2 py-1 rounded border ${p.escrito ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-50 text-gray-500'}">✓ Escrito</button>
+                            <button onclick="toggleCheck(${p.id}, 'silicon')" class="px-3 py-1 rounded font-bold ${p.silicon ? 'silicon-done text-green-800' : 'silicon-urgent text-red-800 animate-pulse-subtle'}">⚡ SILICON</button>
+                            <button onclick="toggleCheck(${p.id}, 'familia')" class="px-2 py-1 rounded border ${p.familia ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-50 text-gray-500'}">👥 Familia</button>
+                            
+                            ${p.isIctus ? `
+                                <button onclick="toggleCheck(${p.id}, 'proces')" class="px-2 py-1 rounded border ${p.proces ? 'bg-purple-100 text-purple-800 border-purple-300' : 'bg-amber-100 text-amber-700 font-bold'}">🧠 Procés</button>
+                                <button onclick="toggleCheck(${p.id}, 'ecg')" class="px-2 py-1 rounded border ${p.ecg ? 'bg-purple-100 text-purple-800 border-purple-300' : 'bg-amber-100 text-amber-700 font-bold'}">🫀 ECG</button>
+                            ` : ''}
+
+                            ${p.categoria === 'Urgencias Neurología' && p.destino === 'Ingreso' ? `
+                                <button onclick="toggleCheck(${p.id}, 'informeCerrado')" class="px-2 py-1 rounded border ${p.informeCerrado ? 'bg-green-100 text-green-800 border-green-300' : 'bg-red-100 text-red-700 font-bold'}">🛑 Inf. Cerrado</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+
+                if (p.archivado) {
+                    listaHistorico.insertAdjacentHTML('beforeend', htmlCard);
+                } else {
+                    listaActivos.insertAdjacentHTML('beforeend', htmlCard);
+                    if (tienePendientes) {
+                        numPendientes++;
+                        const pendienteCard = `
+                            <div class="p-4 rounded-lg border-l-4 bg-white shadow-sm ${!p.silicon ? 'border-red-500' : 'border-amber-500'}">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-xs font-semibold text-gray-500">${p.categoria}</span>
+                                        <h4 class="font-bold text-gray-800">${p.nhc} (${p.iniciales})</h4>
+                                    </div>
+                                    <div class="text-right text-sm text-red-600 font-medium space-y-1">
+                                        ${pendientesTxt.map(t => `<div class="bg-red-50 px-2 py-0.5 rounded text-xs">${t}</div>`).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        listaPendientes.insertAdjacentHTML('beforeend', pendienteCard);
+                    }
+                }
+            });
+
+            const badge = document.getElementById('badge-pendientes');
+            if(numPendientes > 0) {
+                badge.innerText = numPendientes;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function borrarTodo() {
+            if(confirm("¿Seguro que quieres borrar todo el historial? Se perderán todos los pacientes.")) {
+                pacientes = [];
+                actualizarLocalStorage();
+                render();
+            }
+        }
+
+        toggleCampos();
+        render();
+    </script>
+</body>
+</html>
