@@ -17,22 +17,41 @@
 </head>
 <body class="bg-gray-100 font-sans min-h-screen pb-12">
 
-    <!-- Navbar / Pestanyes -->
     <nav class="bg-blue-900 text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-4xl mx-auto flex justify-around p-3 text-sm md:text-base">
-            <button onclick="switchTab('registro')" id="btn-registro" class="font-bold border-b-2 border-white px-2 py-2">📝 Registre</button>
-            <button onclick="switchTab('pendientes')" id="btn-pendientes" class="font-bold border-b-2 border-transparent px-2 py-2 relative text-gray-300">
-                ⚠️ Pendents
-                <span id="badge-pendientes" class="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
-            </button>
-            <button onclick="switchTab('tasques')" id="btn-tasques" class="font-bold border-b-2 border-transparent px-2 py-2 text-gray-300">📌 Altres Tasques</button>
-            <button onclick="switchTab('historico')" id="btn-historico" class="font-bold border-b-2 border-transparent px-2 py-2 text-gray-300">📦 Historial</button>
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center p-2 gap-2 text-sm">
+            <div class="flex gap-1 md:gap-2">
+                <button onclick="switchTab('registro')" id="btn-registro" class="font-bold border-b-2 border-white px-2 py-2">📝 Registre</button>
+                <button onclick="switchTab('pendientes')" id="btn-pendientes" class="font-bold border-b-2 border-transparent px-2 py-2 relative text-gray-300">
+                    ⚠️ Pendents
+                    <span id="badge-pendientes" class="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                </button>
+                <button onclick="switchTab('tasques')" id="btn-tasques" class="font-bold border-b-2 border-transparent px-2 py-2 text-gray-300">📌 Altres Tasques</button>
+                <button onclick="switchTab('historico')" id="btn-historico" class="font-bold border-b-2 border-transparent px-2 py-2 text-gray-300">📦 Historial</button>
+            </div>
+            <div class="flex items-center gap-2 bg-blue-800 px-3 py-1.5 rounded-lg border border-blue-700">
+                <span class="font-medium text-xs text-blue-200">📅 Guàrdia: <strong id="current-guardia-date" class="text-white">--/--/----</strong></span>
+                <button onclick="obrirModalNovaGuardia()" class="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-2 py-1 rounded transition">➕ Nova Guàrdia</button>
+            </div>
         </div>
     </nav>
 
+    <div id="modal-guardia" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full space-y-4">
+            <h3 class="text-lg font-bold text-gray-900">Iniciar Nova Guàrdia</h3>
+            <p class="text-xs text-gray-500">Això arxivarà automàticament tots els pacients i tasques actuals en l'historial d'aquesta data.</p>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Data de la Guàrdia</label>
+                <input type="date" id="input-fecha-guardia" class="w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-50 border">
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="tancarModalNovaGuardia()" class="px-3 py-2 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">Cancel·lar</button>
+                <button onclick="confirmarNovaGuardia()" class="px-3 py-2 text-sm bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700">Començar Guàrdia</button>
+            </div>
+        </div>
+    </div>
+
     <main class="max-w-4xl mx-auto p-4">
 
-        <!-- ================= PESTANYA REGISTRE ================= -->
         <section id="tab-registro" class="space-y-6">
             <div class="bg-white p-5 rounded-xl shadow">
                 <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Nou Pacient</h2>
@@ -73,7 +92,6 @@
                             <label class="flex items-center"><input type="checkbox" id="check-visto" class="w-5 h-5 mr-2"> Vist</label>
                             <label class="flex items-center"><input type="checkbox" id="check-escrito" class="w-5 h-5 mr-2"> Escrit</label>
                             
-                            <!-- Camps condicionals només per a Urgències Neurologia -->
                             <div id="campos-urgencias-checklist" class="space-y-2 pt-1 border-t border-blue-200 mt-1">
                                 <label class="flex items-center text-red-700 font-bold"><input type="checkbox" id="check-silicon-form" class="w-5 h-5 mr-2"> 🟥 Silicon fet</label>
                                 <label class="flex items-center"><input type="checkbox" id="check-familia" class="w-5 h-5 mr-2"> Família Informada</label>
@@ -90,7 +108,6 @@
                         </div>
                     </div>
 
-                    <!-- Campos Condicionales de Urgencias Neurología -->
                     <div id="campos-urgencias" class="bg-purple-50 p-4 rounded-lg space-y-3">
                         <span class="font-semibold text-purple-900 block">Destí Urgències</span>
                         <div class="flex gap-4">
@@ -107,49 +124,96 @@
                 </form>
             </div>
 
-            <!-- Lista Activa Rápida -->
             <div class="bg-white p-5 rounded-xl shadow">
-                <h3 class="text-lg font-bold text-gray-800 mb-3">Pacients de la Guàrdia</h3>
+                <h3 class="text-lg font-bold text-gray-800 mb-3">Pacients de la Guàrdia Activa</h3>
                 <div id="lista-pacientes" class="space-y-3"></div>
             </div>
         </section>
 
-        <!-- ================= PESTANYA PENDENTS ================= -->
         <section id="tab-pendientes" class="space-y-4 hidden">
             <h2 class="text-xl font-bold text-red-600">⚠️ Tasques Pendents Urgents</h2>
             <div id="lista-pendientes" class="space-y-3"></div>
         </section>
 
-        <!-- ================= PESTANYA ALRES TASQUES ================= -->
         <section id="tab-tasques" class="space-y-4 hidden">
             <div class="bg-white p-5 rounded-xl shadow">
                 <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">📌 Altres Tasques de la Guàrdia</h2>
-                
-                <!-- Formulari afegir tasca genèrica -->
                 <form id="tasca-form" onsubmit="guardarTasca(event)" class="flex gap-2">
-                    <input type="text" id="nova-tasca" class="flex-1 rounded-md border-gray-300 shadow-sm p-2 bg-gray-50 border" required placeholder="Ex: Parlar amb el d'adjunt de guàrdia de ràdio, revisar analítica box 4...">
+                    <input type="text" id="nova-tasca" class="flex-1 rounded-md border-gray-300 shadow-sm p-2 bg-gray-50 border" required placeholder="Ex: Parlar amb l'adjunt de ràdio, revisar analítica box 4...">
                     <button type="submit" class="bg-blue-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition">Afegir</button>
                 </form>
-
-                <!-- Llista de tasques genèriques -->
                 <div id="lista-tasques-generiques" class="mt-6 space-y-2"></div>
             </div>
         </section>
 
-        <!-- ================= PESTANYA HISTORIAL ================= -->
         <section id="tab-historico" class="space-y-4 hidden">
             <div class="flex justify-between items-center">
-                <h2 class="text-xl font-bold text-gray-800">📦 Historial de Pacients Arxivats</h2>
-                <button onclick="borrarTodo()" class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200">Esborrar Base de Dades</button>
+                <h2 class="text-xl font-bold text-gray-800">📦 Historial de Guàrdies Anteriors</h2>
+                <button onclick="borrarTodo()" class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200">Esborrar Tota la BD</button>
             </div>
-            <div id="lista-historico" class="space-y-3"></div>
+            <div id="lista-historico" class="space-y-4"></div>
         </section>
 
     </main>
 
     <script>
+        // Estructures de dades actualitzades per suportar multi-guàrdia
+        let fechaActualGuardia = localStorage.getItem('fecha_guardia_activa') || formatarFecha(new Date());
         let pacientes = JSON.parse(localStorage.getItem('pacientes_guardia')) || [];
         let tasquesGeneriques = JSON.parse(localStorage.getItem('tasques_generiques_guardia')) || [];
+        let historialGuardias = JSON.parse(localStorage.getItem('historial_guardias_completas')) || [];
+
+        function formatarFecha(dateObj) {
+            const d = new Date(dateObj);
+            const dia = String(d.getDate()).padStart(2, '0');
+            const mes = String(d.getMonth() + 1).padStart(2, '0');
+            return `${dia}/${mes}/${d.getFullYear()}`;
+        }
+
+        function obrirModalNovaGuardia() {
+            const avui = new Date().toISOString().split('T')[0];
+            document.getElementById('input-fecha-guardia').value = avui;
+            document.getElementById('modal-guardia').classList.remove('hidden');
+        }
+
+        function tancarModalNovaGuardia() {
+            document.getElementById('modal-guardia').classList.add('hidden');
+        }
+
+        function confirmarNovaGuardia() {
+            const inputFecha = document.getElementById('input-fecha-guardia').value;
+            if(!inputFecha) return;
+            
+            const parts = inputFecha.split('-');
+            const nuevaFechaFormated = `${parts[2]}/${parts[1]}/${parts[0]}`;
+
+            // 1. Si teníem dades a la guàrdia anterior, les archivem a l'historial grupal abans d'esborrar
+            if(pacientes.length > 0 || tasquesGeneriques.length > 0) {
+                // Eliminem duplicats vells de la mateixa data si existissin
+                historialGuardias = historialGuardias.filter(g => g.fecha !== fechaActualGuardia);
+                
+                historialGuardias.push({
+                    fecha: fechaActualGuardia,
+                    pacientes: [...pacientes],
+                    tasques: [...tasquesGeneriques]
+                });
+                localStorage.setItem('historial_guardias_completas', JSON.stringify(historialGuardias));
+            }
+
+            // 2. Reiniciar estats actius
+            fechaActualGuardia = nuevaFechaFormated;
+            pacientes = [];
+            tasquesGeneriques = [];
+            
+            localStorage.setItem('fecha_guardia_activa', fechaActualGuardia);
+            actualizarLocalStorage();
+            localStorage.setItem('tasques_generiques_guardia', JSON.stringify(tasquesGeneriques));
+            
+            tancarModalNovaGuardia();
+            document.getElementById('current-guardia-date').innerText = fechaActualGuardia;
+            render();
+            switchTab('registro');
+        }
 
         function guardarPaciente(e) {
             e.preventDefault();
@@ -166,7 +230,6 @@
                 observaciones: document.getElementById('observaciones').value,
                 visto: document.getElementById('check-visto').checked,
                 escrito: document.getElementById('check-escrito').checked,
-                // Si no és Urgències Neurologia, es marquen automàticament com a true (completat/no requerit) perquè no saltin alertes
                 silicon: esUrgenciesNeuro ? document.getElementById('check-silicon-form').checked : true,
                 familia: esUrgenciesNeuro ? document.getElementById('check-familia').checked : true,
                 isIctus: esUrgenciesNeuro ? document.getElementById('check-ictus').checked : false,
@@ -213,7 +276,6 @@
             const cat = document.getElementById('categoria').value;
             const esUrgenciesNeuro = (cat === 'Urgències Neurologia');
             
-            // Mostrar o amagar els camps del formulari segons la categoria
             document.getElementById('campos-urgencias-checklist').style.display = esUrgenciesNeuro ? 'block' : 'none';
             document.getElementById('campos-urgencias').style.display = esUrgenciesNeuro ? 'block' : 'none';
             
@@ -252,6 +314,7 @@
         }
 
         function render() {
+            document.getElementById('current-guardia-date').innerText = fechaActualGuardia;
             const listaActivos = document.getElementById('lista-pacientes');
             const listaPendientes = document.getElementById('lista-pendientes');
             const listaHistorico = document.getElementById('lista-historico');
@@ -264,15 +327,12 @@
             
             let numPendientes = 0;
 
-            // Render Pacients
+            // 1. RENDER PACIENTS ACTIUS DE LA GUÀRDIA
             pacientes.forEach(p => {
                 const esUrgencies = (p.categoria === 'Urgències Neurologia');
-                
                 let pendientesTxt = [];
                 if(!p.visto) pendientesTxt.push("Vist");
                 if(!p.escrito) pendientesTxt.push("Escrit");
-                
-                // Alertes només si és Urgències Neurologia
                 if(esUrgencies) {
                     if(!p.silicon) pendientesTxt.push("🚨 REGISTRE SILICON");
                     if(!p.familia) pendientesTxt.push("Informar Família");
@@ -283,6 +343,7 @@
 
                 const tienePendientes = pendientesTxt.length > 0;
 
+                // Generar targeta visual bàsica
                 const htmlCard = `
                     <div class="border rounded-lg p-4 bg-white shadow-sm space-y-3">
                         <div class="flex justify-between items-start">
@@ -294,21 +355,16 @@
                             </div>
                             ${!p.archivado ? `<button onclick="archivar(${p.id})" class="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200">📦 Arxivar</button>` : '<span class="text-xs text-green-600 font-bold">Arxivat</span>'}
                         </div>
-                        
                         <div class="flex flex-wrap gap-2 text-xs pt-1">
                             <button onclick="toggleCheck(${p.id}, 'visto')" class="px-2 py-1 rounded border ${p.visto ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-50 text-gray-500'}">✓ Vist</button>
                             <button onclick="toggleCheck(${p.id}, 'escrito')" class="px-2 py-1 rounded border ${p.escrito ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-50 text-gray-500'}">✓ Escrit</button>
-                            
-                            <!-- Botons interactius que només es mostren si és Urgències Neurologia -->
                             ${esUrgencies ? `
                                 <button onclick="toggleCheck(${p.id}, 'silicon')" class="px-3 py-1 rounded font-bold ${p.silicon ? 'silicon-done text-green-800' : 'silicon-urgent text-red-800 animate-pulse-subtle'}">⚡ SILICON</button>
                                 <button onclick="toggleCheck(${p.id}, 'familia')" class="px-2 py-1 rounded border ${p.familia ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-50 text-gray-500'}">👥 Família</button>
-                                
                                 ${p.isIctus ? `
                                     <button onclick="toggleCheck(${p.id}, 'proces')" class="px-2 py-1 rounded border ${p.proces ? 'bg-purple-100 text-purple-800 border-purple-300' : 'bg-amber-100 text-amber-700 font-bold'}">🧠 Procés</button>
                                     <button onclick="toggleCheck(${p.id}, 'ecg')" class="px-2 py-1 rounded border ${p.ecg ? 'bg-purple-100 text-purple-800 border-purple-300' : 'bg-amber-100 text-amber-700 font-bold'}">🫀 ECG</button>
                                 ` : ''}
-
                                 ${p.destino === 'Ingrés' ? `
                                     <button onclick="toggleCheck(${p.id}, 'informeCerrado')" class="px-2 py-1 rounded border ${p.informeCerrado ? 'bg-green-100 text-green-800 border-green-300' : 'bg-red-100 text-red-700 font-bold'}">🛑 Inf. Tancat</button>
                                 ` : ''}
@@ -317,22 +373,16 @@
                     </div>
                 `;
 
-                if (p.archivado) {
-                    listaHistorico.insertAdjacentHTML('beforeend', htmlCard);
-                } else {
+                // Col·locar-la segons correspongui
+                if (!p.archivado) {
                     listaActivos.insertAdjacentHTML('beforeend', htmlCard);
                     if (tienePendientes) {
                         numPendientes++;
                         const pendienteCard = `
                             <div class="p-4 rounded-lg border-l-4 bg-white shadow-sm ${esUrgencies && !p.silicon ? 'border-red-500' : 'border-amber-500'}">
                                 <div class="flex justify-between items-center">
-                                    <div>
-                                        <span class="text-xs font-semibold text-gray-500">${p.categoria}</span>
-                                        <h4 class="font-bold text-gray-800">${p.nhc} (${p.iniciales})</h4>
-                                    </div>
-                                    <div class="text-right text-sm text-red-600 font-medium space-y-1">
-                                        ${pendientesTxt.map(t => `<div class="bg-red-50 px-2 py-0.5 rounded text-xs">${t}</div>`).join('')}
-                                    </div>
+                                    <div><span class="text-xs font-semibold text-gray-500">${p.categoria}</span><h4 class="font-bold text-gray-800">${p.nhc} (${p.iniciales})</h4></div>
+                                    <div class="text-right text-sm text-red-600 font-medium space-y-1">${pendientesTxt.map(t => `<div class="bg-red-50 px-2 py-0.5 rounded text-xs">${t}</div>`).join('')}</div>
                                 </div>
                             </div>
                         `;
@@ -341,7 +391,7 @@
                 }
             });
 
-            // Render Tasques Generals
+            // 2. RENDER TASQUES GENERALS ACTIVES
             if(tasquesGeneriques.length === 0) {
                 listaTasquesGen.innerHTML = `<p class="text-sm text-gray-500 italic py-2">No tens cap tasca pendent per a aquesta guàrdia.</p>`;
             } else {
@@ -359,6 +409,33 @@
                 });
             }
 
+            // 3. RENDER PESTANYA HISTORIAL AGRUPAT PER DATA DE GUÀRDIA
+            // Unim els arxivats de la guàrdia activa actual (perquè surtin a l'historial)
+            const pacientsArxivatsActuals = pacientes.filter(p => p.archivado);
+            
+            // Renderitzar històrics reals guardats de guàrdies tancades
+            if(historialGuardias.length === 0 && pacientsArxivatsActuals.length === 0) {
+                listaHistorico.innerHTML = `<p class="text-sm text-gray-500 italic text-center py-8">No hi ha cap registre històric desat encara.</p>`;
+            } else {
+                // Generem una vista combinada neta
+                let datesVistes = new Set();
+                
+                // Mostrar primer els arxivats de la guàrdia actual si n'hi ha
+                if(pacientsArxivatsActuals.length > 0) {
+                    renderGrupGuardiaHistorial(fechaActualGuardia, pacientsArxivatsActuals, tasquesGeneriques.filter(t => t.feta), listaHistorico);
+                    datesVistes.add(fechaActualGuardia);
+                }
+
+                // Mostrar la resta de guàrdies passades de la base de dades
+                // Les ordenem al revés (les més recents primer)
+                const ordenades = [...historialGuardias].reverse();
+                ordenades.forEach(g => {
+                    if(!datesVistes.has(g.fecha)) {
+                        renderGrupGuardiaHistorial(g.fecha, g.pacientes, g.tasques, listaHistorico);
+                    }
+                });
+            }
+
             const tasquesGeneriquesSenseFer = tasquesGeneriques.filter(t => !t.feta).length;
             const totalPendientes = numPendientes + tasquesGeneriquesSenseFer;
 
@@ -371,13 +448,62 @@
             }
         }
 
+        function renderGrupGuardiaHistorial(fecha, llistaPacients, llistaTasques, contenidor) {
+            const idGrup = 'grup-' + fecha.replace(/\//g, '-');
+            
+            // Comptadors útils
+            const numPacients = llistaPacients.length;
+            const numTasques = llistaTasques.length;
+
+            let pacientsHtml = llistaPacients.map(p => `
+                <div class="p-2 border-b last:border-0 text-xs text-gray-700 flex justify-between">
+                    <div><strong>${p.nhc}</strong> (${p.iniciales}) - <span class="text-blue-800 font-medium">${p.categoria}</span>: <em>${p.sospecha}</em></div>
+                    <div class="text-gray-400 font-mono">${p.destino !== 'N/A' ? '➔ ' + p.destino : ''}</div>
+                </div>
+            `).join('');
+
+            let tasquesHtml = llistaTasques.map(t => `
+                <div class="p-1.5 text-xs text-gray-400 flex items-center gap-1 italic">
+                    ✓ <span>${t.text}</span>
+                </div>
+            `).join('');
+
+            if(numPacients === 0) pacientsHtml = `<p class="text-xs text-gray-400 italic p-2">Sense pacients arxivats.</p>`;
+            if(numTasques === 0) tasquesHtml = `<p class="text-xs text-gray-400 italic p-2">Sense altres tasques.</p>`;
+
+            const htmlGrup = `
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <button onclick="document.getElementById('${idGrup}').classList.toggle('hidden')" class="w-full bg-gray-50 hover:bg-gray-100 p-3 flex justify-between items-center text-sm font-bold text-gray-700 border-b">
+                        <div class="flex items-center gap-2">
+                            <span>📅 Guàrdia del <strong>${fecha}</strong></span>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs font-normal text-gray-500">
+                            <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold">${numPacients} Pac.</span>
+                            <span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-bold">${numTasques} Tasques</span>
+                            <span class="text-gray-400 text-base">▾</span>
+                        </div>
+                    </button>
+                    <div id="${idGrup}" class="hidden divide-y bg-white">
+                        <div class="p-2 bg-blue-50/50 text-[11px] font-bold tracking-wider text-blue-900 uppercase">👥 Pacients Atesos</div>
+                        <div class="divide-y">${pacientsHtml}</div>
+                        <div class="p-2 bg-amber-50/50 text-[11px] font-bold tracking-wider text-amber-900 uppercase">📌 Tasques Completades</div>
+                        <div class="p-2 bg-gray-50/30">${tasquesHtml}</div>
+                    </div>
+                </div>
+            `;
+            contenidor.insertAdjacentHTML('beforeend', htmlGrup);
+        }
+
         function borrarTodo() {
-            if(confirm("Segur que vols esborrar tot l'historial? Es perdran tots els pacients.")) {
+            if(confirm("ATENCIÓ CRÍTICA: Estàs segur de voler esborrar TOTA la base de dades? Es perdran totes les guàrdies passades i els pacients actuals per sempre.")) {
                 pacientes = [];
                 tasquesGeneriques = [];
-                actualizarLocalStorage();
-                localStorage.setItem('tasques_generiques_guardia', JSON.stringify(tasquesGeneriques));
+                historialGuardias = [];
+                localStorage.clear();
+                fechaActualGuardia = formatarFecha(new Date());
+                localStorage.setItem('fecha_guardia_activa', fechaActualGuardia);
                 render();
+                switchTab('registro');
             }
         }
 
